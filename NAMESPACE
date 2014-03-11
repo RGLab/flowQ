@@ -1,0 +1,57 @@
+import("methods")
+import("BiocGenerics")  # for class "file"
+import("flowCore")
+importFrom("geneplotter", "multidensity", "closeHtmlPage")
+importFrom(methods, as)
+
+exportMethods("outliers",
+             "initialize",
+              "show",
+              "names",
+              "writeLines")
+
+exportClasses("outlierResult",
+              "qaAggregator",
+              "binaryAggregator",
+              "discreteAggregator",
+              "factorAggregator",
+              "stringAggregator",
+              "numericAggregator",
+              "rangeAggregator",
+              "aggregatorList",
+              "qaGraph",
+              "qaGraphList",
+              "qaProcessFrame",
+              "qaProcess",
+              "qaProcessSummary")
+
+
+export("validProcess",
+       "qaProcess",
+       "aggregatorList",
+       "qaGraph",
+       "qaGraphList",
+       "qaProcessFrame",
+       "writeQAReport",
+       "qaReport",
+       "qaProcess.marginevents",
+       "qaProcess.timeline",
+       "qaProcess.timeflow",
+       "qaProcess.cellnumber",
+       "qaProcess.2DStatsPlot",
+       "qaProcess.ECDFPlot",
+       "qaProcess.DensityPlot",
+       "qaProcess.KLDistPlot",
+       "qaProcess.BoundaryPlot",
+       "locateDuplicatedParameters",
+       "normalizeSets",
+	   "writeQATextReport",
+	   "txtFormatQAObject",
+       "preProcessFlowList",
+       "binaryAggregator",
+       "discreteAggregator",
+       "factorAggregator",
+       "stringAggregator",
+       "numericAggregator",
+       "rangeAggregator",
+       "evaluateProcess")

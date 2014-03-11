@@ -1,0 +1,824 @@
+% NOTE -- ONLY EDIT THE .Rnw FILE!!!  The .tex file is
+% likely to be overwritten.
+%
+%\VignetteIndexEntry{Data Quality Assesment for Ungated Flow Cytometry Data}
+%\VignetteDepends{flowViz}
+%\VignetteKeywords{}
+%\VignettePackage{flowViz}
+\documentclass[11pt]{article}
+
+\usepackage{times}
+\usepackage{hyperref}
+\usepackage[authoryear,round]{natbib}
+\usepackage{times}
+\usepackage{comment}
+\usepackage{graphicx}
+\usepackage{subfigure}
+\usepackage{amsmath}
+
+\textwidth=6.2in
+\textheight=8.5in
+\oddsidemargin=.1in
+\evensidemargin=.1in
+\headheight=-.3in
+
+\newcommand{\scscst}{\scriptscriptstyle}
+\newcommand{\scst}{\scriptstyle}
+\newcommand{\Rfunction}[1]{{\texttt{#1}}}
+\newcommand{\Rcode}[1]{{\texttt{#1}}}
+\newcommand{\Robject}[1]{{\texttt{#1}}}
+\newcommand{\Rpackage}[1]{{\textsf{#1}}}
+\newcommand{\Rclass}[1]{{\textit{#1}}}
+\newcommand{\Rfunarg}[1]{{\texttt{#1}}}
+\newcommand{\code}[1]{{\texttt{#1}}}
+
+%% wrapper for figure environments
+%% #1=filename #2=width #3=caption #4=label
+\newcommand{\myincfig}[4]{%
+  \begin{figure}[htbp]
+    \begin{center}
+      \includegraphics[width=#2]{#1}
+      \caption{\label{#4}#3}
+    \end{center}
+  \end{figure}
+}
+
+
+\title{Quality Assessment of Ungated High Throughput Flow Cytometry Data-using
+the flowQ package}
+\author{N. Gopalakrishnan, F. Hahne}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+The advent of high throughput methods has resulted in a large increase
+in the amount of data available from cytometry (FCM) experiments. This
+large amount of information needs to be summarized and presented in a
+visually appealing manner, so that the researcher can draw appropriate
+inferences from the data.
+
+Quality assessment (QA) is an important step in the data analysis
+pipeline, often helping researchers identify differences in samples
+originating from changes in conditions that are probably not
+biologically motivated. The general aim is to establish a quality
+control criterion to give special consideration to these samples or
+even exclude them from further analysis.
+
+The \Rpackage{flowQ} package provides a range of highly extensible
+tools to perform QA on one or several \Rclass{flowSets}, as well as a
+unified infrastucture to present the results of such analyses through
+diagnostic plots, numeric output, and qualitative indicators, all
+linked together using interactive HTML. Since QA criteria differ
+considerably depending on the experimental setup, we have tried to
+keep our framework as generic as possible. See the sister vignette
+``Extending flowQ: how to implement QA processes'' of the
+\Rclass{flowQ} package for details about extensibility. The focus of
+this vignette is on the application of existing methods as well as the
+general ideas behind the established QA criteria.
+
+\section{QA components and the HTML reports}
+The design of \Rclass{flowQ} is modular, reflecting the typical need
+for multiple QA criteria to comprehensively check several aspects of
+FCM data. The outcome for each criterion is represented by a single
+module, which is implemented in objects of class
+\Rclass{qaProcess}. Unless the user wants to extend the funcionality
+of the package, these objects are typically created from
+\Rclass{flowSets} using one of the existing constructor
+functions. Roughly, the internal structure of a \Rclass{qaProcess}
+object can be thought of as a list of QA results for each sample in a
+\Rclass{flowSet}, including visualizations by means of diagnostic
+plots and sample-specific quantitative or qualitative values
+(Figure~\ref{flowQStructure}). This design allows the software to
+bundle the results of multiple modules using a module-independent
+front end. For the convenient interactive navigation on a computer,
+the front end is a clickable HTML report, but in the setting of an
+automated pipeline, this might as well be direct storage in a data
+base.
+
+\myincfig{flowQStructure}{0.95\textwidth}{Schematics of an
+  \Rpackage{flowQ} QA report. Columns in the table represent different
+  QA criteria, rows represent samples. For each criterion there may be
+  a single overall summary plot. For each sample in the respective QA
+  criterion there may be a single detailed plot as well as several
+  channel-specific plots if necessary. Accordingly, for each sample,
+  the overall QA result is sumamrized by a single aggregator, and
+  optional channel-specific results can be summarized by additional
+  channel aggregators.}{flowQStructure}
+
+
+The most simple FCM experiments can be handled by a single
+\Rclass{flowSet}, however more complicated designs such as
+longitudinal sample studies or multi-panel experiments are prevalent,
+and we have taken some steps to accomodate such designs in our
+framework. We begin by taking a look at the simple designs first. More
+complicted multi-panel designs are treated in
+section~\ref{multipanel}.
+
+\section{Quality assessment of single panel experiments}
+There are four methods in \Rpackage{flowQ} that are implemented for
+the analysis of single panel experiments. Neither of them assumes any
+relationship between the samples --- with the exception of basic
+sample groupings --- and they should be universally applicable to
+almost any FCM data.
+
+\subsection*{Cell number}
+The most simple QA criterion is available through the
+\Rfunction{qaProcess.cellnumber} constructor. It will check whether
+the total number of events for a given sample is above a certain
+threshold. This treshold can either be absolute (by using the
+\Robject{absolute.value} argument), or determinded as an outlier from
+the average number of events per sample. Assuming that there are
+groups of samples within the \Rclass{flowSet}, we can perform the
+outlier detection with respect to the particular group of a sample
+rather than the whole set. The inputs for
+\Rfunction{qaProcess.cellnumber} used here are the \Robject{GvHD}
+\Rclass{flowSet}, which we can be loaded from the \Rpackage{flowCore}
+package, the output directory for the summary plot that is generated
+(see Figure~\ref{cellnum}), and a tuning parameter that controls the
+sensitivity of the outlier detection:
+<<cellnum, results=hide>>=
+library(flowQ)
+data(GvHD)
+GvHD <- GvHD[1:10]
+dest <- file.path(tempdir(), "flowQ")
+qp1 <- qaProcess.cellnumber(GvHD, outdir=dest, cFactor=0.75)
+@ 
+<<cellnumfig, echo=false, results=tex>>=
+img <- qp1@summaryGraph@fileNames[2]
+to <- paste(flowQ:::guid(), "pdf", sep=".")
+f <- file.copy(img, to)
+cat(sprintf("\\myincfig{%s}{0.5\\textwidth}{%s}{%s}\n", to,
+            paste("Summary graphics for the cell number QA criterion produced",
+                  "by the \\Rfunction{qaProcess.cellnumber} function."), 
+            "cellnum"))
+@
+
+\subsection*{Boundary events}
+A typical FCM instrument has a certain dynamic range over which it
+acquires a signal. All fluorescence intensities that fall out of this
+range will be accumulated as margin events, i.e., they are
+artificially given the minimum or the maximum value of the dynamic
+range. A high number of these events usually indicates potential
+problems with compensation, instrument settings or drifts. We can use
+the \Rfunction{qaProcess.marginevents} constructor to create a
+\Rclass{qaProcess} object that checks for abnormal accumulation of
+boundary events. The inputs are very similar to the previous example,
+but we need to additionally specify the channels we want to include in
+the analysis. The default is to take all, but for now we will only use
+FSC and SSC. We also don't create pdf versions of the graphics in
+order to save some time and disk space.
+<<margin, results=hide>>=
+qp2 <- qaProcess.marginevents(GvHD, channels=c("FSC-H", "SSC-H"), outdir=dest,
+                              pdf=FALSE)
+@ 
+<<marginsumfig, echo=false, results=tex>>=
+img <- qp2@summaryGraph@fileNames[2]
+to <- paste(flowQ:::guid(), "jpg", sep=".")
+f <- file.copy(img, to)
+cat(sprintf("\\myincfig{%s}{0.8\\textwidth}{%s}{%s}\n", to,
+            paste("Summary graphics of the FSC-H channel for the boundary event",
+                  "QA criterion produced by the \\Rfunction{qaProcess.marginevent}",
+                  "function."), "marginsum"))
+@
+<<margindetfig, echo=false, results=tex>>=
+img <- qp2@frameProcesses[[1]]@frameGraphs[[1]]@fileNames[[2]]
+to <- paste(flowQ:::guid(), "jpg", sep=".")
+f <- file.copy(img, to)
+cat(sprintf("\\myincfig{%s}{0.6\\textwidth}{%s}{%s}\n", to,
+            paste("Detailed sample-specific graphics of the FSC-H channel",
+                  "for the boundary event QA criterion produced by the",
+                  "\\Rfunction{qaProcess.marginevent}function."), "margindet"))
+@
+
+An example for the summary plot created for the FSC channel is shown
+in Figure~\ref{marginsum}. Figure~\ref{margindet} shows a
+sample-specific density plots, which are accessible through the HTML
+drilldown.
+
+\subsection*{Time anomalies}
+Most FCM instruments record a time tick for each event they
+measure. This information can be used to detect drifts on the
+instrument over time, abnormal flow rates or sudden jumps in
+measurement intensities. Two QA criteria have been implemented in
+\Rpackage{flowQ} to address time-dependent anomalies in the
+\Rfunction{qaProcess.timeline} and \Rfunction{qaProcess.timeflow}
+constructors. The former tries to find unexpected non-random
+acquisition of fluorescence intensities for one or several FCM
+channels, while the latter checks for steady, uniterupted flow rates.
+
+We can produce \Rclass{qaProcess} objects for both criteria using the
+code in the following chunk:
+<<time, results=hide>>=
+GvHD <- transform(GvHD, "FL1-H"=asinh(`FL1-H`), "FL2-H"=asinh(`FL2-H`))
+qp3 <- qaProcess.timeline(GvHD, channel="FL1-H", outdir=dest, cutoff=1)
+qp4 <- qaProcess.timeflow(GvHD, outdir=dest, cutoff=2)
+@ 
+<<timefig, echo=false, results=tex>>=
+img <- qp3@summaryGraph@fileNames[2]
+to <- paste(flowQ:::guid(), "jpg", sep=".")
+f <- file.copy(img, to)
+cat(sprintf("\\myincfig{%s}{0.6\\textwidth}{%s}{%s}\n", to,
+            paste("Summary graphics of the FL1-H channel for the time line",
+                  "QA criterion produced by the \\Rfunction{qaProcess.timeline}",
+                  "function."), "timeline"))
+@ 
+
+Figure~\ref{timeline} shows a sample overview plot produced by
+\Rfunction{qaProcess.timeline}. These are smoothed regression lines of
+fluorescence intensity vs. time, and we expect a straight horizontal
+line for well-behaved samples. Wiggly lines, sudden jumps or trends
+all indicate potential problems. The \Rfunction{timeFilter} class in
+\Rpackage{flowCore} can be used to remove problematic events from a
+\Rclass{flowFrame}.
+
+\subsection*{HTML report}
+As mentioned in the introduction, the \Rclass{qaProcess} objects are
+independent entities containing the QA results. Presentation of these
+results is the job of a frontend. In \Rpackage{flowQ} we have
+developed a frontend to create interactive HTML output for one or
+several \Rclass{qaProcess} objects in the \Rfunction{writeQAReport}
+function. The inputs to the function are a \Rclass{flowSet}, a list of
+\Rclass{qaProcess} objects generated for the same data, and an output
+directory to generate the report in. It makes sense to use the same
+output directory as before when creating the different
+\Rclass{qaProcess} objects since the images do not have to be copied
+any more. The following code chunk produces the HTML report for all
+four QA criteria introduced before:
+<<htmlreport>>=
+url <- writeQAReport(GvHD, processes=list(qp1, qp2, qp3, qp4), outdir=dest)
+@ 
+
+We can take a look at the final report by pointing a browser to the
+url returned by the function.
+<<browse, eval=FALSE>>=
+browseURL(url)
+@ 
+
+
+\section{Quality assessment of multi-panel experiments}
+\label{multipanel}
+In many flow cytometry experiments, samples from patients are often
+divided into several aliquots. The aliquots are then stained using
+antibody-dye combinations that are specific for certain antigens
+presented on the cell surface or for particular intracellular
+markers. The basis for many quality control procedures is that
+morphological parameters like Forward and Side Scatter, which are
+dependent on the cell size and the granularity of the cell, should be
+similar across aliquots. Additionally, certain fluorescent dyes
+utilized in the staining procedure may be replicated in some of the
+aliquots.  Flourescence intensities recorded from such dyes are also
+expected to be similar across aliquots.
+
+Several one and two dimensional methods have been developed in the
+\Rpackage{flowQ} package that helps users perform quality
+assessment. The package also provides infrastructure to generate
+interactive quality reports based on a unified HTML output.
+
+
+Our sample data set involves samples collected from 4 individuals which
+were then split into 8 aliquots.Each aliquot was then stained with a
+different combination of stains as shown in the figure below.
+
+
+\begin{figure}{}
+\begin{center}
+\includegraphics[width=0.6\textwidth]{stainInfo.pdf}
+\caption{Fluorescence dyes used in the experiment}
+\end{center}
+\end{figure}
+
+
+\subsection{Data preprocessing and transformation}
+
+<<loadPackage, echo=false,results=hide>>=
+library(RColorBrewer)
+library(latticeExtra)
+@
+
+The first step in the data analysis pipeline involves reading in the
+cytometry data which can be achieved using the \Rfunction{read.FCS}
+function for FCS files or using the \Rfunction{load} function for flow
+cytometry data that was saved from a previous R workspace. In our
+example, the data file qData.rda resides in the data folder of the
+flowQ package and can be loaded with the \Rfunction{data} command.
+
+<<Read_Transform,echo=true,results=verbatim>>=
+data(qData)
+qData[[1]][[1]]
+@
+
+The data read into an R session is a \Rclass{list} containing 8
+\Rclass{flowSets}, each \Rclass{flowSet} corresponding to a set of
+aliquots. Each \Rclass{flowSets} contains data from four
+patients. During the experiment, blood was drawn from these four
+patients and split into the 8 aliquots after initial processing but
+prior to any staining. It is fair to assume that these aliquots should
+be similar in all aspects that are not staining related.
+
+The description column in the parameters slot of each
+\Rclass{flowFrame} contains information regarding the stains used for
+each sample. In data sets that do not contain the stain information,
+the description field of each \Rclass{flowFrame} needs to be updated
+with the corresponding stain information. Description fields for
+parameters like forward/side scatter and Time are to be filled with
+\Rcode{NA}, since they are not associated to a specific staining
+marker. The methods \Rfunction{pData} and \Rfunction{parameters} can
+be used to update the description field.
+
+The fluorescence parameters first need to be transformed for better
+visualization of the data. For our sample dataset, all flow parameters
+except forware and side scatter were transformed using the
+\Rfunction{asinh} transformation.
+
+<<transformData, echo=true,results=hide>>=
+tData <- lapply(qData, function(x) transformList(colnames(x)[3:7], asinh) %on% x)
+@
+
+A pairwise plot of all parameters for the first \Rclass{flowSet} is
+shown below
+
+<<Plot1_TransformedData, fig=true, echo=true,eval=TRUE>>=
+library(flowViz)
+plot(tData[[1]][[1]])
+@
+
+\subsection{QA process for boundary values}
+
+A large number of boundary values could possibly cause problems during
+the data analysis stage. Since the QA procedure compares the flow
+parameters for each patient across the eight aliquots, we have to
+ensure that the percentage of boundary events is not unproportionally
+high. This could cause issues with other QA checks, especially for the
+1D QA processes introduced later, which involve estimating the density
+and KL distances or when 2D summary statistics such as the means are
+computed. Moreover, high numbers of boundary events often indicate
+compensatation problems or instrumental drifts during the data
+acquisition.
+
+The \Rfunction{qaProcess.BoundaryPlot} allows the user to quickly
+visualize the percentage of boundary events for each patient across
+aliquots in the data set. The output generated from the function can
+be written to an html report using the \Rfunction{writeQAReport}. A
+related function, \Rfunction{qaProcess.marginevents} can be used to
+detect boundary artifacts for single \Rclass{flowSets} in settings
+without aliquots.
+
+The percentage of boundary events for "FSC-A" and "CD3" that exceed a
+set cutoff of 3\% can be visualized using the
+\Rfunction{qaProcess.BoundaryPlot} function as shown below.
+
+<<displayBoundaryData,echo=true,results=hide>>=
+resBoundary <- qaProcess.BoundaryPlot(tData, dyes=c("FSC-A","CD3"), 
+                                      outdir=dest, cutoff=3, pdf=TRUE)
+imagePath <- resBoundary@summaryGraph@fileNames[2]
+#writeQAReport(tData[[1]], list(resBoundary), outdir=dest,pdf=TRUE)
+@
+
+The percentage of boundary events for "FSC-A" and "CD3" are shown in
+the figure below. Each panel in the figure represents data from a
+patient with each horizontal bar indicating the percentage of boundary
+events for an aliquot. The horizontal bars for aliquots whose boundary
+events exceed our setcutoff value of 3\% are colored red.
+
+<<displayBoundImage,echo=false,results=tex>>=
+to <- paste(flowQ:::guid(), "jpg", sep=".")
+f <- file.copy(imagePath, to)
+cat('\\includegraphics[width=1.0\\textwidth]{', to, '}\n', sep="")
+@
+
+Clearly the data could benefit some filtering of the boundary
+events. We proceed to create a boundary filter to remove the boundary
+events from our dataset.
+
+A boundary filter can be used to remove events at the boundaries 
+for each channel.The data after excluding the boundary events is stored as 
+a \Rclass{list} of \Rclass{flowSet}s 
+
+<<BoundaryEvents, echo=true,results=hide>>=
+
+createBoundaryFilterList<-function(flowSet){
+    len <- length(colnames(flowSet))
+    tmp<-fsApply(flowSet,range)
+    tmp<-lapply(tmp,function(x){
+        x[[colnames(x)[len]]]<-NULL
+        x
+    })
+    res<-lapply(tmp,function(y){
+        apply(y,2,function(x){
+        # 2*x-extendrange(r=x,0.1)
+          c((x[1]+2*.Machine$double.eps),(x[2]-2*.Machine$double.eps))
+        })
+    
+    })
+    filtList<-lapply(res,function(x){
+            rectangleGate(filterId="boundary",.gate=x)
+    }		)	
+    return(filtList)
+}
+
+boundData<-list()
+for(i in seq_len(length(tData))){
+    wfNew <- workFlow(tData[[i]], name="panel")
+    filtList<-createBoundaryFilterList(Data(wfNew[["base view"]]))
+    flt<-filterList(x=filtList,filterId="boundary")
+    add(wfNew,flt)
+    boundData[[i]] <- Data(wfNew[["boundary+"]])
+    rm(wfNew)
+    cat(i)
+    cat(".")
+}
+@
+
+\subsection{Data normalization}
+
+When data from different aliquots are compared, shifts in floursecence
+intensities can be observed for the same fluorescence
+dye. Biologically there should have been no differences as the cell
+types came from a single sample from the patient.  These shifts need
+to be corrected for before proceeding with any gating. Additionally,
+the QA processes for density,ECDF plots etc relies on the distance
+between the plots from the same patient to identify patient panels
+that are potential outliers. Proper alignment of data from different
+aliquots is necessary and can be done using the \Rfunction{warpSet}
+function. The function normalizes data based on landmarks estimated
+from high density regions in the data.
+
+The parameters that are duplicated across the aliquots for each
+patient can be identified using the
+\Rfunction{locateDuplicatedParameters}. For each patient, the data
+obtained from floursecence dyes CD8, CD27 and CD4 for each of the
+eight aliquots are normalized so that the peaks in flow parameters for
+each patient aligns up between aliquots.
+
+<<Data Normalization, echo=true,results=hide>>=
+  library(flowStats)
+  patientID=sampleNames(boundData[[1]])
+  ls <- length(patientID)
+  #dupes <- locateDuplicatedParameters(boundData)
+  #nData<-normalizeSets(flowList=boundData,dupes=dupes[-c(1,2)]) ## ignoring FSC-A, SSC-A
+  nData<-normalizeSets(flowList=boundData,dupes=c("CD8","CD27","CD4"))
+@
+
+\subsection{ECDF plots}
+
+Emperical cumulative distribution function gives the probability that
+a randomly picked sample is less than or equal to its value. ECDF
+plots can easily reveal differences in the distribution of the flow
+cytometry parameters although they do not reveal much information
+regarding the underlying shape of the distribution.
+
+The \Rfunction{qaProcess.ECDFPlot} produces ECDF plots of the flow
+cytometry parameters. The ECDF plots are grouped by patient so that
+data from the eight aliquots for each patient appear together in one
+plot, thereby allowing direct comparison of any differences in their
+distribution.The cytometer channels from which the data was obtained
+are also displayed in the legend.
+
+To identify patient panels that have highest variation amongst the ECDF
+plots for a particular parameter, pairwise KL distances between values 
+from each aliquot were estimated. For each patient, the flourescence parameter
+distances were then summed up. This yields a measure that could be useful for 
+better comparison of the magnitude of differences. Univariate outlier detection 
+was performed on the normalized distance values to identify patient panels where ecdf 
+plots are different from each other.
+
+<<getDistances,echo=false,results=hide>>=
+getDistance<-function(res,dyes){
+len<-length(res@frameProcesses)
+result<-data.frame()
+for( j in seq_len(length(dyes))){
+
+    for (i in seq_len(len)){
+    
+        patName<-res@frameProcesses[[i]]@frameID
+        dist   <-res@frameProcesses[[i]]@frameAggregators@.Data[[j]]@x
+        passed <-res@frameProcesses[[i]]@frameAggregators@.Data[[j]]@passed
+        tempRes<-data.frame(Patient=patName,Parameter=dyes[j],Passed=passed,
+                  Distance=dist,check.names=F)   
+    	result<-rbind(result,tempRes)
+}
+}
+return(result)
+}
+@
+
+
+<<ECDF plots 1, echo=true>>=
+dyes<- c("FSC-A","SSC-A")
+resFSCECDF <- qaProcess.ECDFPlot(nData,dyes=dyes,outdir=dest,alpha=0.4,pdf=TRUE)
+#ecdfUrl<-writeQAReport(nData[[1]], list(resFSCECDF), outdir=dest,pdf=TRUE)
+#browseURL(ecdfUrl)
+
+@
+
+<<genTblECDF,echo=false>>=
+imagePath<-resFSCECDF@summaryGraph@fileNames[2]
+getDistance(resFSCECDF,dyes)
+@
+
+ECDF plots for forward and side scatter is shown below.
+
+<<produceFSCECDFimage,echo=false,results=tex>>=
+to <- paste(flowQ:::guid(), "pdf", sep=".")
+f <- file.copy(imagePath, to)
+cat('\\includegraphics[width=1.0\\textwidth]{', to, '}\n', sep="")
+@
+
+<<ECDF plots 2, echo=true,results=hide>>=
+resCD8ECDF <- qaProcess.ECDFPlot(nData,dyes=c("CD8","CD27"),outdir=dest,alpha=0.4,pdf=TRUE)
+@
+
+<<genTblECDF2,echo=false>>=
+imagePath<-resCD8ECDF@summaryGraph@fileNames[2]
+getDistance(resCD8ECDF,c("CD8","CD27"))
+
+@
+
+ECDF plots for dyes CD8 and CD27 are shown below
+
+<<produceCD8ECDFimage,echo=false,results=tex>>=
+to <- paste(flowQ:::guid(), "jpg", sep=".")
+f <- file.copy(imagePath, to)
+cat('\\includegraphics[width=1.0\\textwidth]{', to, '}\n', sep="")
+@
+
+Each line in the ECDF plot for a patient is plotted in a different
+color corresponding to the aliquot from which the sample was
+selected. The distance between the ECDF lines for each patient
+indicates how different the data from each aliquots are.  If the
+flourescence parameters are similar across the aliquots the ECDF lines
+would be close together(example FSC-A for "pid01027").If the aliquot
+intensities were different, then the ECDF plots for the aliquots would
+diverge out.(example SSC-A for "pid02050")
+
+The legend on the right corner of each plot also contains information
+regarding the channel from which the fluorescence intensities were
+recorded. If a particular dye is absent from an aliquot, the
+corresponding legend name entry for channel information is left empty.
+
+From the ECDF plots it appears that the forward/side scatter as well
+as the CD8 intensities for patient "pid02050" appears to be different
+from the rest of the group indicating some problem with the
+experimental or data collection procedure.However, the intensity for
+dye CD27 for patient "pid02050" appears similar to the rest of the
+group. These results are also confirmed by higher distance measures
+calculated for patient "pid02050" for parameter SSC-A, FSC-A and
+CD8. A larger number for the distance measure indicates a greater
+difference between the flourescence intensities from the aliquots.
+
+\subsection{Density plots}
+
+Density plots reveal useful information regarding the underlying shape
+of the distribution. They describe the probability of a variable being
+at a specific value.
+
+Density plots can be produced by the \Rfunction{qaProcess.DensityPlot}
+function.  Each panel in the plot produced represents data from a
+patient. The density data for parameters from each aliquot are
+represented in a different color.  Additionally, the channels from
+which they were acquired are shown in the legend.
+
+For each flourescence parameter from a patient, pairwise KL distances 
+between the data from the aliquots were computed by binning the parameter
+values for each aliquot. Univariate outlier detection was performed on the
+sum of the pairwise distances to identify patient panels where density plots 
+are different from the rest of the group.
+
+Density plot for forward/side scatter can be generated by passing
+these arguments to the dyes input of the
+\Rfunction{qaProcess.densityPlot}
+
+<<Density plots 1, echo=true,results=hide>>=
+resDensityFSC <- qaProcess.DensityPlot(nData,dyes=c("FSC-A","SSC-A"),outdir=dest,alpha=0.2,pdf=TRUE)
+#densityUrl<-writeQAReport(nData[[1]], list(resDensity), outdir=dest)
+#browseURL(densityUrl)
+@
+
+<<genTblDens1,echo=false>>=
+imagePath<-resDensityFSC@summaryGraph@fileNames[2]
+getDistance(resDensityFSC,c("FSC-A","SSC-A"))
+@
+
+The density plots for forward/side scatter are show below.
+
+<<produceDensityFSC,echo=false,results=tex>>=
+to <- paste(flowQ:::guid(), "jpg", sep=".")
+f <- file.copy(imagePath, to)
+cat('\\includegraphics[width=1.0\\textwidth]{', to, '}\n', sep="")
+@
+
+
+<<Density plots 2, echo=true,results=hide>>=
+resDensityCD8 <- qaProcess.DensityPlot(nData,dyes=c("CD8","CD27"),outdir=dest,alpha=0.2,pdf=TRUE)
+@
+
+
+<<genTbl2Dens,echo=false<<=
+imagePath<-resDensityCD8@summaryGraph@fileNames[2]
+getDistance(resDensityCD8,c("CD8","CD27"))
+@
+
+The density plots for dyes CD8 and CD27 are show below.
+
+<<produceDensityCD27,echo=false,results=tex>>=
+to <- paste(flowQ:::guid(), "jpg", sep=".")
+f <- file.copy(imagePath, to)
+cat('\\includegraphics[width=1.0\\textwidth]{', to, '}\n', sep="")
+@
+
+As with the ECDF plots, the closer the density plot lines are for a particular
+patient, the smaller the difference is between the aliquots. From the FSC/SSC 
+density plots, the density lines appears to be most further apart for patient 
+"pid02050". For patient "pid02050" clearly distinct bimodal distribution is observed
+from the FSC-A density plot while the other patients have a unimodal distribution
+The calculated distance measure was also found to be highest in patient "pid02050"
+for parameter FSC-A.
+
+A difference in the shape of the distribution for patient "pid02050"
+can also be observed from the CD8 density plot. This result can also
+be observed in the calculated distance measures for parameter CD8
+
+While the FSC-A, SSC-A and CD8 plots for patient "pid02050 appear to
+be significantly different from the rest of the group, the density
+plots for CD27 look very similar for all the patients as indicated by
+the close overlap of the density lines.  Another observation from
+stain CD8 is that the two density plot lines for channel FITC-A lines
+up together and appears to be different from that for FL3-A channel
+even though they represent intensities from the same dye. Perhaps this
+could be caused by lack of proper compensation for spectral overlap.
+
+The legend for the plot indicates the channel from which the
+intensities were recorded as well as the aliquot from which the sample
+was obtained. For stains that are absent from an aliquot, the
+corresponding channel is left empty in the legend.
+
+\subsection{2D Summary statistics}
+
+Two dimensional summaries often provide additional information not
+available in single dimensional approaches such as the density plot as
+they display information regarding the consolidated distribution of
+parameters.Parameters pairs such as forward and sideward scatter occur
+in measurements from all the aliquots.
+
+Statistical measures such as the mean, median etc can be calculated
+for each parameter and can be represented in the form of a scatter
+plot for each patient.  The summary statistic of the flourescence
+parameter pair from each aliquot represents a point in the scatter
+plot panel of each patient.
+
+The \Rfunction{2DStatsPlot} generates scatter plots of summary statistics of 
+fluorescence parameter pairs occurring in each aliquot. Any parameter pairs in an
+aliquot that occur in more than once in the \Rclass{list} of \Rclass{flowSets}
+can be passed as input to this function.
+
+Two dimensional outlier detection is performed on the scatter plot
+panels for each patient to identify aliquots with the summary
+statistic measure different from the rest. The summary plot on the top
+of the HTML report shows the an overview of the selected summary
+statistic measure for each patient. The outliers are displayed in red.
+
+The scatter plot for each parameter pair can also be observed in
+horizontal panels for each patient. For each detailed patient
+panel,the fluorescence channel from which the parameter was recorded
+as well as the aliquot number are displayed in the legend. The outlier
+aliquots are marked with a red dot.
+
+The mean flourescence intensities for a pair wise combination of parameter  values
+of "FSC-A","SSC-A","CD4" and "CD8" can be generated by passing them
+as input to the \Rfunction{qaProcess.2DStatsPlot}
+
+<<2DSummary_mean, echo=true,results=hide>>=
+par<-c("FSC-A","SSC-A","CD4","CD8")
+resMean <- qaProcess.2DStatsPlot(nData,dyes=par,outdir=dest,func=mean,
+outBound=0.28,pdf=TRUE)
+imagePath <- resMean@summaryGraph@fileNames[2]
+#summaryUrl<-writeQAReport(nData[[1]], list(resMean), outdir=dest,pdf=TRUE)
+#browseURL(summaryUrl)
+
+@
+
+The scatter plot of mean FSC/SSC and CD4/CD8 value pairs are shown in
+the figure below.
+
+<<2Dsummaryplot_mean,echo=false,results=tex>>=
+to <- paste(flowQ:::guid(), "jpg", sep=".")
+f <- file.copy(imagePath, to)
+cat('\\includegraphics[width=1.0\\textwidth]{', to, '}\n', sep="")
+@
+
+<<2DSummary_median, echo=true,results=hide>>=
+par<-c("FSC-A","SSC-A","CD4","CD8")
+resMedian <- qaProcess.2DStatsPlot(nData,dyes=par,outdir=dest,func=median,
+outBound=0.28,pdf=TRUE)
+imagePath <- resMedian@summaryGraph@fileNames[2]
+#summaryUrl<-writeQAReport(nData[[1]], list(resMedian), outdir=dest,pdf=TRUE)
+#browseURL(summaryUrl)
+@
+
+The scatter plot of median FSC/SSC and CD4/CD8 value pairs are shown
+in the figure below.
+
+<<2Dsummaryplot_median,echo=false,results=tex>>=
+to <- paste(flowQ:::guid(), "jpg", sep=".")
+f <- file.copy(imagePath, to)
+cat('\\includegraphics[width=1.0\\textwidth]{', to, '}\n', sep="")
+@
+
+For the mean and median summary plots from each patient, if the data
+from the eight aliquots were similar, we would expect the dots to
+cluster together. We expect an aliquot with an experimental artifact
+to be spread out from the rest of the group. These outliers can then
+be identified by two dimensional outlier detection method. Outliers in
+the plot are marked in red color.
+
+From the mean and median summary plots for FSC-A/SSC-A, patient
+"pid02050" seems to have data most scattered, indicating differences
+between the aliquots from which the parameters were recorded. Data
+from outlier aliquots most distant from the rest of the points for
+each patient is shown in red. The outlier aliquot was well as the
+channel from which it was acquired can be identified by going into the
+detailed patient panel information presented in the HTML report
+generated by the \Rfunction{writeQAReport}
+
+\subsection{Kullback-Leibler distance plots}
+
+The Kullback-Leibler Information between densities f1 and f2 is
+defined as
+
+\begin{equation}
+\label{eq:test} 
+\ KLI=\int{\log{ \frac{f_{1}(x)}{f_{2}(x)}}f_{1}(x) dx}
+\end{equation}
+
+Density estimation followed by numerical integration can be used to
+calculate the pairwise KL distance between the parameters values for
+each aliquot to identify patient panels that are potentially different
+from the rest. However such an approach may be computationally
+intensive, especially for flow cytometry data.
+
+An alternative approach is to bin the floursence data to obtain an
+estimate of density. The estimated density values can then be used to
+compute pair wise KL distances for the aliquots from which data was
+obtained.The aliquots which were not stained for a particular
+parameter are labelled as missing.
+
+For each patient , the pair wise KL distances can then be visualized
+by a plot with a color scale representing the value for the distance
+matrix. Aliquots that are very similar to each other will have a lower
+color intensity on the color scale.
+
+The KLDistance plot can be generated using the function
+\Rfunction{qaProcess.KLDistPlot}
+
+<<KL Distance plots, echo=true,results=hide>>=
+resKLdist <- qaProcess.KLDistPlot(nData,dyes=c("SSC-A","CD8"),outdir=dest,alpha=0.05,pdf=TRUE)
+writeQAReport(nData[[1]], list(resKLdist), outdir=dest)
+imagePath <- resKLdist@summaryGraph@fileNames[2]
+#browseURL(klDistURL)
+@
+
+The KL Distance for the aliquots for parameters "SSC-"A and "CD8" are  shown below.
+<<KLDistanceplot,echo=false,results=tex>>=
+to <- paste(flowQ:::guid(), "jpg", sep=".")
+f <- file.copy(imagePath, to)
+cat('\\includegraphics[width=1.0\\textwidth]{', to, '}\n', sep="")
+@
+
+
+When KL distance plots from several patients are plotted side by side
+with the same intensity axis for the color, we can draw conclusions
+regarding which which patient panel has aliquots most similar to each
+other as well as which patient exhibited the largest difference in
+aliquots. For the SSC-A plot above it is clear that patient "pid02057"
+has the least color intensity and "pid02050" has the highest
+intensity. From the CD8 plot, it is very clear that patient "pid02050"
+has higher color intensities and is different from the rest of the
+group.These result are consistent with what has been observed in the
+ECDF plots for these parameters discussed earlier.
+
+KL distance plots are more useful in identifying differences between
+aliquots within a patient. From the CD8 dye plot for patient
+"pid02050", the highest intensities occur for comparisons between
+aliquot pairs (1,6) , (1,2) and (5,6) and (5,2).  It is intersting to
+note that dyes 1 and 5 were obtained from the FL3-A channel while
+aliquots 2,6 were obtained from the FITC-A channel. These difference
+in patient "pid02050" are more evident when the KL distance plots are
+viewed simultaneously with the ECDF plots for this particular patient.
+
+\subsection{Conclusions}
+
+The visualization techniques presented in this package provide
+different views of the underlying statistical properties of the
+data. A combination of the visualization techniques could help the
+user identify deviant samples. The visualization tools provided by the
+flowQ package could potentially help identify samples differences that
+are probably not biologically motivated and hence could be further
+investigated before spending time and resources for gating and
+detailed analysis.
+  
+
+%\clearpage
+%\bibliographystyle{plainnat} 
+%\bibliography{cytoref}
+\end{document}
