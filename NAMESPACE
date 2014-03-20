@@ -1,8 +1,8 @@
-import("methods")
-import("BiocGenerics")  # for class "file"
 import("flowCore")
+import("methods")
+importClassesFrom(BiocGenerics, file)
 importFrom("geneplotter", "multidensity", "closeHtmlPage")
-importFrom(methods, as)
+
 
 exportMethods("outliers",
              "initialize",
