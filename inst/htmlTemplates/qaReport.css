@@ -1,0 +1,736 @@
+/* ----------- general page layout -----------*/
+
+body
+{
+    font-family:helvetica,arial,sans-serif;
+    padding:0px;
+    margin:0px;
+    margin-right:1%;
+}
+
+
+/* --------- end general page layout ---------*/
+
+
+/* --------------- table header --------------*/
+
+/*bounding table*/
+table.QA
+{
+    border:2px solid black;
+    border-collapse:collapse;
+    border-spacing:0px;
+    width:100%;
+    padding:0px;
+    margin-left:0.5%;
+    margin-bottom:33px;
+    margin-top:0.5%;
+}
+
+/* The header line with the QA process titles serving as buttons */
+tr.QAHeader
+{
+    background-color:#c9d8e5;
+    margin:0px;
+    padding:0px;
+}
+
+tr.QAHeader th
+{ 
+    border-right:1px solid black;
+    font-size:14px;
+    white-space:nowrap;
+}
+
+tr.QAHeader div
+{  
+    color:#05006d;
+    margin:5px 10px;
+    padding:5px 0px;
+}
+
+tr.QAHeader div:hover
+{ 
+    color: #76ade0;
+    cursor:pointer;
+}
+
+/* The table line for flowSet summary and summary graphics */
+tr.QASummary
+{
+    background-color:#c9d8e5;
+    margin:0px;
+    padding:0px;
+    border-bottom:2px dotted black;
+}
+
+tr.QASummary th
+{ 
+    border-right:1px solid black;
+}
+
+tr.QASummary td
+{ 
+    border-right:1px solid black;
+    text-align:center; 
+}
+
+/* The QA summary images */
+tr.QASummary img
+{
+    background-color:transparent;
+    margin:20px 0px;
+    padding:3px;
+    display:none; 
+}
+
+tr.QASummary img:hover
+{
+    background-color:#76ade0;
+    cursor:pointer;
+}
+
+tr.QASummary img.nolink
+{
+    background-color:transparent;
+    margin:20px 0px;
+    padding:3px;
+    display:none; 
+    cursor:default;
+}
+
+
+
+/* The rows for idividual samples. We have to distinguish between even
+   and odd rows. */
+tr.QAFrameHeader
+{
+    padding:0px;
+    margin:0px;
+}
+
+*.odd
+{
+    background-color:#a8ccee;
+}
+
+*.even
+{
+    background-color:#c9d8e5;
+}
+
+tr.QAFrameHeader th
+{ 
+    width:20%;
+    border-right:1px solid black;
+    font-size:14px;
+    padding-bottom:5px;
+    text-align:left;
+    padding-left:5px;
+}
+
+div.QAGrpHeader
+{
+    padding-top:5px;
+    margin-left:8px;
+    padding-left:5px;
+    margin-bottom:9px;
+    margin-right:16px;
+    font-size:19px;
+    white-space:nowrap;
+    border-bottom:2px dotted white;
+    color:white;
+    position:relative;
+    left:0px;	
+}
+
+div.QAFrameHeaderNr
+{
+    margin:0px;
+    padding:0px;
+    padding-left:5px;
+    font-size:12px;
+    color:white;
+    font-weight:bolder;
+    margin-right:100%;
+    white-space:nowrap;
+    position:relative;
+}
+
+span.QAFrameHeaderGrp
+{
+    font-size:11px;
+    position:relative;
+    top:8px;
+    color:white;
+    margin-left:20px;
+    white-space:nowrap;
+}
+
+span.QAFrameHeaderID
+{
+    padding-left:10px;
+}
+
+/* A table for the flowSet and flowFrame pData */
+table.QAParameter
+{
+    border-collapse:collapse;
+    border-spacing:0px;
+    border:none;
+    margin:5px;
+    margin-bottom:10px;
+}
+
+table.QAParameter th
+{
+    padding:3px 6px;
+    border-bottom:1px dotted white;
+    border-right:1px dotted white;	
+    font-size:13px;
+}
+
+table.QAParameter td
+{
+    border-right:1px dotted white;
+    font-size:12px;
+    text-align:center;
+    padding:3px 6px;
+}
+
+table.QAParameter th.right, table.QAParameter td.right
+{
+    border-right:none;
+}
+
+
+td.QASumAggr
+{ 
+    border-left:1px solid black;
+}
+
+td.QADetAggr
+{ 
+    border-left:0px dotted white;
+    margin:0px;
+    padding:0px;
+    width:0px;
+}
+
+td.QASumGraph
+{ 
+    border-left:1px solid black;
+    margin:0px;
+    padding:0px;
+}
+
+td.QADetGraph
+{ 
+    border-left:0px dotted white;
+    margin:0px;
+    padding:0px;
+    width:0px;
+}
+
+div.QARowButton
+{  
+    color:#05006d;
+}
+
+div.QARowButton:hover
+{  
+    color:#76ade0;
+    cursor:pointer;
+}
+
+div.QAFrameButton
+{  
+    color:#05006d;
+    margin:15px 10px;
+    padding:0px;
+    width:20px;
+    height:20px;
+}
+
+div.QAFrameButton:hover
+{ 
+    outline: 3px solid #76ade0;
+    cursor:pointer;
+}
+
+div.QADetButton
+{  
+    margin:3px 7px;
+    padding:2px;
+    display:none;
+    font-size:10px;
+}
+
+div.QADetButton:hover
+{ 
+    color:#76ade0;
+    cursor:pointer;
+}
+
+
+img.QASumGraph
+{ 
+    margin:5px;
+    padding:3px;
+    display:none;
+    
+}
+
+img.QASumGraph:hover
+{
+    background-color:#76ade0;
+    cursor:pointer;
+}
+
+img.QASumGraph.nolink
+{ 
+    background-color:transparent;
+    margin:5px;
+    padding:3px;
+    display:none;
+    cursor:default;
+}
+
+img.QADetGraph
+{
+    margin:5px;
+    padding:3px;
+    display:none;
+}
+
+img.QADetGraph:hover
+{
+    background-color:#76ade0;
+    cursor:pointer;
+}
+
+img.QADetGraph.nolink
+{
+    background-color:transparent;
+    margin:5px;
+    padding:3px;
+    display:none;
+    cursor:default;
+}
+
+div.QADetTrigger
+{
+    color:#05006d;
+    margin-top:3px;
+    margin-left:3px;
+    float:left;
+    position:relative;
+    bottom:11px;
+    right:2px;
+    font-size:20px;
+    font-weight:bold;
+    z-index:10;
+}
+
+div.QADetTrigger:hover
+{
+    color:#76ade0;
+    cursor:pointer;
+}
+
+span.QAPages
+{
+    font-weight:bold;
+    font-size:15px;
+    color:#05006d;
+    padding:5px 8px;
+}
+
+span.QAPages:hover
+{
+    color:#76ade0;
+    cursor:pointer;
+}
+
+span.QAPanelsAct
+{
+    font-weight:bold;
+    font-size:13px;
+    padding:5px 8px;
+    color:#76ade0;
+}
+
+span.QAPanelsAct:hover
+{
+    color:#76ade0;
+    cursor:pointer;
+}
+
+a.QAPanelsAct:hover
+{
+    color:darkred;
+    cursor:pointer;
+}
+
+a.QAPanelsAct
+{
+    color:darkred;
+}
+
+
+span.QAPanels
+{
+    font-weight:bold;
+    font-size:13px;
+    color:#05006d;
+    padding:5px 8px;
+}
+
+span.QAPanels:hover
+{
+    color:#76ade0;
+    cursor:pointer;
+}
+
+a
+{
+    color:#05006d;
+    text-decoration:none;
+}
+
+a:hover
+{
+    color:#76ade0;
+    cursor:pointer;
+}
+
+div.QAPagesTile
+{  
+    border-top:2px solid black;
+    position:fixed;
+    bottom:0px;
+    margin-left:1%;
+    margin-right:1%;
+    margin:0px;
+    padding-left:20px;
+    padding-top:3px;
+    background-color:white;
+    width:100%;
+    height:30px;
+}
+
+
+
+
+/* ------------- end table header -------------*/
+
+
+
+
+
+
+
+/* --------------- aggregators ----------------*/
+
+/*binary aggregtor*/
+img.QABinAggr
+{
+    width:17px;
+    height:17px;
+    border-style:none;
+    padding:0px;
+    margin:0px;
+}
+
+/* /\*range aggregtor*\/ */
+div.QARange
+{
+    width:40px; 
+    height:11px; 
+    border:1px solid black; 
+    padding:1px;
+    margin:2px;
+    text-align:left;
+}
+
+/* /\*range aggregtor*\/ */
+div.QARange div
+{
+    height:11px; 
+    padding:0px; 
+    margin:0px; 
+}
+
+/* /\*range aggregtor*\/ */
+div.QARange div.passed
+{
+    background-color:green;
+}
+
+/* /\*range aggregtor*\/ */
+div.QARange div.failed
+{
+    background-color:red;
+}
+
+/* /\*range aggregtor*\/ */
+div.QARange div.label
+{
+    color:black;
+    font-weight:bolder;
+    width:40px;
+    text-align:center;
+    position:relative;
+    bottom:9px; font-size:7px;
+}
+
+/*factor aggregtor*/
+span.QAFactAggr
+{
+    margin:0px 3px;
+    font-size:13px;
+}
+
+/*string aggregtor*/
+span.QAStringAggr
+{
+    margin:0px 3px;
+    font-size:13px;
+}
+
+/*numeric aggregtor*/
+div.QANumAggr
+{
+    margin:0px 3px;
+    font-size:13px;
+    font-weight:bold;
+}
+
+
+
+
+
+/* --------------- summary page ----------------*/
+
+
+/* The container to hold the whole summary page */
+table.qaPanelBound
+{	
+    padding:10px 20px;
+}
+
+/* The main table structure for the page. Background color alternates
+   between even and odd rows, and we want to use a darkblue font color */
+table.qaPanelSummary 
+{
+    border-collapse:collapse; 
+    empty-cells:show; 
+    padding:2px 4px 4px 4px; 
+    color:#05006d;
+}
+
+table.qaPanelSummary tr.odd
+{
+    background-color:#a8ccee;
+}
+
+table.qaPanelSummary tr.even
+{
+    background-color:#c9d8e5; 
+}
+
+/* The header line for the summary column */
+table.qaPanelSummary th
+{
+    font-size:14px;
+    padding:5px 10px;
+    border-bottom:3px solid white;
+}
+
+table.qaPanelSummary th.left
+{
+    border-right:2px solid white;
+    cursor:default;
+}
+
+/* The header lines for the panel columns */
+table.qaPanelSummary th.right
+{
+    cursor:pointer;
+}
+
+table.qaPanelSummary th.right:hover
+{
+    cursor:pointer;
+    color: #76ade0;
+}
+
+table.qaPanelSummary span
+{
+    font-size:18px;
+    cursor:default;
+}
+
+table.qaPanelSummary th.right span
+{
+    font-size:10px;
+    cursor:default;
+}
+
+/* The cells holding the indicator tables */
+
+table.qaPanelSummary td.bars
+{
+    padding:5px 10px;
+    border-bottom: 3px solid white;
+    text-align:center;
+}
+
+table.qaPanelSummary td.sum
+{
+    padding:5px 20px;
+    border-right: 2px solid white;
+    border-bottom: 3px solid white;
+}
+
+/* The bounding tables for the color bar indicators */
+
+table.qaBar
+{	
+    border-collapse:collapse;
+    empty-cells:show;
+    padding:2px 4px 4px 4px;
+}
+
+table.qaBar td.link
+{
+    cursor:pointer;
+}
+
+/* The row headers for the color bar indicators (the channel names) */
+table.qaBar th
+{
+    font-weight:bold;
+    border:none;
+    padding-right:10px;
+    text-align:right; 
+    font-size:10px;
+    color:white;
+    cursor:default;
+}
+
+table.qaBar th.global
+{
+    cursor:default;
+}
+
+/* The table cells for the color bar indicators. We need to
+   distinguish between even and odd rows and between failed, passed and
+   empty indicators. We also need to treat the leftmost and the rightmost
+   cell speparately*/
+table.qaBar td
+{
+    width:18px; 
+    height:24px;
+    vertical-align:middle;
+    background-position:center; 
+    background-repeat:no-repeat;  
+}
+
+tr.odd table.qaBar td
+{
+    background-image:url(scalemiddleodd.gif);
+}
+
+tr.even table.qaBar td
+{
+    background-image:url(scalemiddleeven.gif);
+}
+
+table.qaBar td.passed
+{
+    background-color:green;
+    border-top:0px solid white; 
+    border-bottom:0px solid white; 
+}
+
+table.qaBar td.failed
+{
+    background-color:red;
+    border-top:0px solid white; 
+    border-bottom:0px solid white; 
+}
+
+table.qaBar td.empty,table.qaBar td.empty.left,table.qaBar td.empty.right
+{
+    border:none;
+}
+
+table.qaBar td.left
+{
+    border-left:0px solid white;
+    background-position:left;
+}
+
+table.qaBar td.right
+{
+    border-right:0px solid white;
+    background-position:right;
+}
+
+tr.odd table.qaBar td.left
+{
+    background-image:url(scaleleftodd.gif); 
+}
+
+tr.even table.qaBar td.left
+{
+    background-image:url(scalelefteven.gif); 
+}
+
+tr.odd table.qaBar td.right
+{
+    background-image:url(scalerightodd.gif); 
+}
+
+tr.even table.qaBar td.right
+{
+    background-image:url(scalerighteven.gif); 
+}
+
+tr.odd table.qaBar td.left
+{
+    background-image:url(scaleleftodd.gif); 
+}
+
+tr.even table.qaBar td.left
+{
+    background-image:url(scalelefteven.gif); 
+}
+
+tr.odd table.qaBar td.right
+{
+    background-image:url(scalerightodd.gif); 
+}
+
+tr.even table.qaBar td.single
+{
+    background-image:url(scalesingleeven.gif); 
+}
+
+tr.odd table.qaBar td.single
+{
+    background-image:url(scalesingleodd.gif); 
+}
+
+table.qaBar td.count
+{
+    width:10px;
+    color:white;
+    font-size:9px;
+    cursor:default;
+    padding:0px;
+    margin:0px;
+    padding-left:8px;
+    
+}
