@@ -295,9 +295,14 @@ setMethod("initialize", "qaGraph",
                       newFileName <- file.path(imageDir, paste(bname, convType,
 		      		     	        sep="."))
                       if(!file.exists(newFileName))
-                          system(paste("convert -resize", paste(newDims, 
-                            collapse="x"), shQuote(fileName), 
-                            shQuote(newFileName)))
+                        system(paste("convert"
+                                ,shQuote(fileName)
+                                ,"-channel RGBA -separate -resize ", paste(newDims,collapse="x")
+                                , "-combine "
+                                , shQuote(newFileName)
+                            )
+                        )
+                            
                       type <- c(ifelse(pdf, "pdf", NA), "jpg")
 					#  files <-c(paste( constructPath(cf),fileName,sep="/"),
 					#           paste(constructPath(cf),newFileName,sep="/"))
