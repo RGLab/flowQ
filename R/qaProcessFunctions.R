@@ -908,7 +908,7 @@ qaProcess.2DStatsPlot <- function(
 			### generate a graph for each patient
 			formula<-paste("`",dyes[cellType,1],"`"," ", "~"," ","`",dyes[cellType,2],"`","|","Patient",sep="")
 			tempgrph[[cellType]][[i]] <- xyplot(eval(parse(text=formula)),data=res,
-                            groups="Aliquot",
+                            groups=Aliquot,
                             ylim = if(nrow(res) >1) extendrange(res[,dyes[cellType,1]],f=3) else res[,dyes[cellType,1]],
                             xlim = if(nrow(res) >1) extendrange(res[,dyes[cellType,2]],f=3) else res[,dyes[cellType,2]],
                             col=myCol[unique(res[,"Aliquot"])],
@@ -931,7 +931,7 @@ qaProcess.2DStatsPlot <- function(
 		else
 			pdf(file=sfile, width=det.dimensions[1],height=det.dimensions[2])
 		print(xyplot(eval(parse(text=formula)),data=outRes, 
-						auto.key=list(space="right"), groups="Aliquot",
+						auto.key=list(space="right"), groups=Aliquot,
 						ylim= if(nrow(outRes) >1) extendrange(outRes[,dyes[cellType,1]],f=1.8) else outRes[,dyes[cellType,1]],
 						xlim= if(nrow(outRes) >1) extendrange(outRes[,dyes[cellType,2]],f=1.8) else outRes[,dyes[cellType,2]],
 						col=c("green","red"),
@@ -1061,7 +1061,7 @@ qaProcess.DensityPlot <- function(
 				## normalize by total count 
                 tempDist[[cellType]][[i]] <- sum(dst,na.rm=T)/length(which(!is.na(dst)==T))
 				tempgrph[[cellType]][[i]] <- 
-						xyplot(dy ~ dx | Patient,data=res,groups="Aliquot",
+						xyplot(dy ~ dx | Patient,data=res,groups=Aliquot,
 								col=myCol[unique(res[,"Aliquot"])], ,ylab="Density",
 								xlab=as.character(cellType),
 								key=simpleKey(text=parLbl,space="right", points=F,col=myCol),
@@ -1243,7 +1243,7 @@ qaProcess.ECDFPlot <- function(flowList,
 			} ##end of alqLen
 
 			if( !all(is.na(unlist(tempInput))) &&  length(which(unlist(lapply(tempInput,length)) > 1))>1 ){
-				tempgrph[[cellType]][[i]]<- xyplot(dx ~ dy | Patient,data=res,groups="Aliquot",
+				tempgrph[[cellType]][[i]]<- xyplot(dx ~ dy | Patient,data=res,groups=Aliquot,
 								col=myCol[unique(res[,"Aliquot"])],ylab="Emperical CDF",xlab=as.character(cellType),
 								key=simpleKey(text=parLbl,space="right", points=F,col=myCol),
 								plot.points=F,pch = ".", cex = 2, type = c("l"))
