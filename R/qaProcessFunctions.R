@@ -200,7 +200,7 @@ qaProcess.marginevents <- function(set, channels=NULL,side="both", grouping=NULL
     lp <- length(parms)
     
     ## count events on the margins using an expression filter
-    ranges <- range(set[[1]], parms)
+    ranges <- range(set[[1]])[, parms]
     perc <- matrix(ncol=ls, nrow=lp, dimnames=list(parms, frameIDs))
     cat("computing margin events...")
 	perc <- t(sapply(parms, function(x) 
